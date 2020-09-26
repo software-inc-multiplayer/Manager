@@ -1,0 +1,40 @@
+{
+  "name": "multiplayer-mod-manager",
+  "version": "3.0.0",
+  "description": "A manager for the multiplayer mod.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "tsc && electron ./dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/software-inc-multiplayer/Manager.git"
+  },
+  "keywords": [
+    "Manager",
+    "API",
+    "Electron",
+    "SoftwareInc",
+    "Software",
+    "Inc",
+    "Multiplayer",
+    "DLLMod",
+    "Mod"
+  ],
+  "author": "CyaCal and daRedLoCo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/software-inc-multiplayer/Manager/issues"
+  },
+  "homepage": "https://github.com/software-inc-multiplayer/Manager#readme",
+  "devDependencies": {
+    "generate-gitignore": "^0.2.6"
+  },
+  "dependencies": {
+    "electron": "^10.1.2",
+    "electron-localshortcut": "^3.2.1",
+    "electron-settings": "^4.0.2",
+    "jquery": "^3.5.1"
+  }
+}
