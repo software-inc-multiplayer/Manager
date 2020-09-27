@@ -35,6 +35,11 @@
     "electron": "^10.1.2",
     "electron-localshortcut": "^3.2.1",
     "electron-settings": "^4.0.2",
-    "jquery": "^3.5.1"
+    "is-online": "^8.4.0",
+    "jquery": "^3.5.1",
+    "jquery-validation": "^1.19.2",
+    "regedit": "^3.0.3",
+    "request": "^2.88.2",
+    "sweetalert2": "^10.3.5"
   }
 }

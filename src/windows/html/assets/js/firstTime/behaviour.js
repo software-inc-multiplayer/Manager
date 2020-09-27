@@ -1,9 +1,17 @@
 const fs = require("fs");
 const $ = require("jquery");
+$.validate = require("jquery-validation");
 const path = require("path");
 const electron = require("electron").remote;
 const settings = require("electron-settings");
-
+const request = require("request");
+const sweetAlert = require("sweetalert2").default;
+var switcher = false;
+const isDev = true;
+var copies = {
+    a: "",
+    b: "",
+};
 (function () {
     var settings = {
         keyboardShortcuts: {
@@ -53,6 +61,23 @@ const settings = require("electron-settings");
             ($page + 1).toString()
         );
         $page++;
+        if ($page == 1) {
+            $("#next-1").hide();
+        }
+        if ($page == 2) {
+            $("#next-2").hide();
+            $("#signup").submit((e) => {
+                e.preventDefault();
+                if (!switcher) {
+                    createAccount();
+                } else {
+                    loginAccount();
+                }
+            });
+            $("#switcherButton").on("click", () => {
+                switchRL();
+            });
+        }
         document.getElementById(`next-${$page}`).onclick = () =>
             handlePageClick();
     }
@@ -91,7 +116,6 @@ const settings = require("electron-settings");
                         }
                     )
                 );
-                console.log($pages);
             });
         $("#next").click(handlePageClick);
         window.setTimeout(function () {
@@ -510,18 +534,209 @@ async function selectInstallation() {
             }
         );
         if (dialog.canceled) return;
-        if (!fs.existsSync(dialog.filePaths[0] + "/Mods")) {
-            electron.dialog.showMessageBoxSync(electron.getCurrentWindow(), {
-                title: "Invalid installation",
-                message:
+        if (
+            !fs.existsSync(dialog.filePaths[0] + "/Mods") ||
+            !fs.existsSync(dialog.filePaths[0] + "/DLLMods")
+        ) {
+            await sweetAlert.fire({
+                titleText: "Invalid Software Inc Folder",
+                text:
                     "Couldn't detect DLLMod folder or Mods folder in the directory you chosen, please select the correct installation directory.",
-                type: "warning",
+                icon: "warning",
+                confirmButtonText: "OK",
+                timer: 3500,
             });
             continue;
         } else {
             document.getElementById("location").innerText = dialog.filePaths[0];
+            $("#next-1").show();
             settings.set("install-dir", dialog.filePaths[0]);
             break;
         }
+    }
+}
+async function createAccount() {
+    const validator = $("#signup").validate();
+    if (!validator.form()) return;
+    const data = $("#signup").serializeArray();
+    const formMap = new Map();
+    data.forEach((data) => {
+        formMap.set(data.name, data.value);
+    });
+    if (formMap.get("username").length < 3) {
+        sweetAlert.fire({
+            titleText: "Invalid username.",
+            text: "Please use a username with 3 or more characters.",
+            icon: "warning",
+        });
+        return;
+    }
+    if (formMap.get("password").length < 6) {
+        sweetAlert.fire({
+            titleText: "Password invalid.",
+            text:
+                "Please use a password with 6 or more characters, for the strongest password, use symbols and numbers.",
+            icon: "warning",
+        });
+        return;
+    }
+    const acc = {
+        username: formMap.get("username"),
+        password: formMap.get("password"),
+        email: formMap.get("email"),
+    };
+    console.log(acc);
+
+    let url = "http://sincmultiplayer.tk/";
+    if (isDev) {
+        url = "http://localhost:5001/multiplayer-mod/us-central1/api/";
+    }
+    request(
+        url + "/accounts/has?username=" + acc.username,
+        (err, res, body) => {
+            if (err) {
+                sweetAlert.fire({
+                    titleText: "Error - Restart the manager.",
+                    text: err.toString(),
+                    icon: "error",
+                });
+                return;
+            }
+            const result = JSON.parse(body);
+            if (result.has) {
+                sweetAlert.fire({
+                    titleText: "Username already in use.",
+                    text: "Use a different username.",
+                    icon: "warning",
+                });
+                return;
+            }
+            request.post(
+                url + "/accounts/create",
+                {
+                    body: acc,
+                    json: true,
+                    headers: [
+                        {
+                            name: "content-type",
+                            value: "application/json",
+                        },
+                    ],
+                },
+                (err, res, body) => {
+                    if (err) {
+                        sweetAlert.fire({
+                            titleText: "Error - Restart the manager.",
+                            text: err.toString(),
+                            icon: "error",
+                        });
+                        return;
+                    }
+                    document.getElementById("titleMajor").innerHTML =
+                        "Account created!";
+                    document.getElementById("descriptionMajor").innerHTML =
+                        "The multiplayer manager is nearly setup!";
+                    $("#subButtonse").hide();
+                    $("#resetButt").hide();
+                    $("#fields").hide();
+                    $("#switcherButton").hide();
+                    $("#next-2").show();
+                }
+            );
+        }
+    );
+}
+function loginAccount() {
+    let url = "http://sincmultiplayer.tk/";
+    if (isDev) {
+        url = "http://localhost:5001/multiplayer-mod/us-central1/api/";
+    }
+    const validator = $("#signup").validate();
+    if (!validator.form()) return;
+    const data = $("#signup").serializeArray();
+    const formMap = new Map();
+    data.forEach((data) => {
+        formMap.set(data.name, data.value);
+    });
+    const acc = {
+        username: formMap.get("username"),
+        password: formMap.get("password"),
+    };
+    console.log(acc);
+    request.post(
+        url + "/accounts/login",
+        {
+            body: acc,
+            json: true,
+            headers: [
+                {
+                    name: "content-type",
+                    value: "application/json",
+                },
+            ],
+        },
+        (err, res, body) => {
+            if (err) {
+                sweetAlert.fire({
+                    titleText: "Error - Restart the manager.",
+                    text: err.toString(),
+                    icon: "error",
+                });
+                return;
+            }
+            console.log(body);
+            const result = body;
+            if (result.status == "INVUSR") {
+                sweetAlert.fire({
+                    titleText: "Invalid username or password.",
+                    text:
+                        "Please enter a correct username or password. Forgot your username/password? Find your registration email with your info and reset link.",
+                    icon: "error",
+                });
+                return;
+            }
+            if (result.status == "INVPASS") {
+                sweetAlert.fire({
+                    titleText: "Invalid  password.",
+                    text:
+                        "Please enter the correct password. Forgot your password? Find your registration email with your info and reset link.",
+                    icon: "error",
+                });
+                return;
+            }
+            document.getElementById("titleMajor").innerHTML = "Logged in!";
+            document.getElementById("descriptionMajor").innerHTML =
+                "The multiplayer manager is nearly setup!";
+            settings.setSync("user", result.user);
+            settings.setSync("token", result.user.token);
+            $("#subButtonse").hide();
+            $("#resetButt").hide();
+            $("#fields").hide();
+            $("#switcherButton").hide();
+            $("#next-2").show();
+        }
+    );
+}
+
+function switchRL() {
+    if (!switcher) {
+        switcher = true;
+        document.getElementById("titleMajor").innerHTML =
+            "Login to your SIMM account.";
+        document.getElementById("subButton").innerHTML = "Login";
+        document.getElementById("switcherButton").innerHTML =
+            "Register Instead..";
+        copies.a = document.getElementById("rfielda").outerHTML;
+        copies.b = document.getElementById("rfieldb").outerHTML;
+        document.getElementById("rfielda").remove();
+        document.getElementById("rfieldb").remove();
+    } else {
+        switcher = false;
+        document.getElementById("titleMajor").innerHTML =
+            "Create a SIMM account.";
+        document.getElementById("subButton").innerHTML = "Sign Up";
+        document.getElementById("switcherButton").innerHTML = "Login Instead..";
+        document.getElementById("beforeThem").outerHTML += copies.a;
+        document.getElementById("rfielda").outerHTML += copies.b;
     }
 }

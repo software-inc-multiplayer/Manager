@@ -4055,6 +4055,10 @@ button:disabled,
     left: 0;
 }
 
+swal-footer {
+    text-align: center;
+}
+
 #wrapper > .scrollZone.right {
     right: 0;
 }
@@ -4068,7 +4072,7 @@ button:disabled,
     margin-bottom: 0;
 }
 
-#wrapper > .copyright a:hover {
+#wrapper > .copyright aa:hover {
     color: inherit;
 }
 
