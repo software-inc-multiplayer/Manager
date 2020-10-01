@@ -1,6 +1,7 @@
 function compareTime(time1, time2) {
     return new Date(time1) > new Date(time2); // true if time1 is later
 }
+const jQuery = require("jquery");
 
 (function ($) {
     // Settings.

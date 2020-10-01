@@ -3,10 +3,8 @@ const path = require("path");
 const url = require("url");
 const settings = require("electron-settings");
 const electronLocalShortcut = require("electron-localshortcut");
-const { dialog, ipcMain } = require("electron");
+const { dialog } = require("electron");
 const { unlinkSync } = require("fs");
-const home = require("./home");
-const ipc = ipcMain;
 
 module.exports = async function spawn() {
     unlinkSync(settings.file());
@@ -22,22 +20,17 @@ module.exports = async function spawn() {
     if (global.isProd) {
         win.loadURL(
             url.format({
-                pathname: path.join(__dirname, "html", "firstTime.html"),
+                pathname: path.join(__dirname, "html", "noInternet.html"),
                 protocol: "file:",
                 slashes: true,
             })
         );
     } else {
-        win.loadFile(path.join(__dirname, "html", "firstTime.html"));
+        win.loadFile(path.join(__dirname, "html", "noInternet.html"));
     }
     win.removeMenu();
     electronLocalShortcut.register(win, "CTRL+I", () => {
         win.webContents.openDevTools();
-    });
-    ipc.on("firstTimeComplete", () => {
-        settings.setSync("firstTime", true);
-        win.destroy();
-        home();
     });
     win.show();
 };

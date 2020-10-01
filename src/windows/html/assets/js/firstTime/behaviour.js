@@ -7,7 +7,7 @@ const settings = require("electron-settings");
 const request = require("request");
 const sweetAlert = require("sweetalert2").default;
 var switcher = false;
-const isDev = true;
+const isDev = false;
 var copies = {
     a: "",
     b: "",
@@ -66,6 +66,9 @@ var copies = {
         }
         if ($page == 2) {
             $("#next-2").hide();
+            document.getElementById(`next-2`).onclick = () => {
+                require("electron").ipcRenderer.sendSync("firstTimeComplete");
+            };
             $("#signup").submit((e) => {
                 e.preventDefault();
                 if (!switcher) {
@@ -77,6 +80,7 @@ var copies = {
             $("#switcherButton").on("click", () => {
                 switchRL();
             });
+            return;
         }
         document.getElementById(`next-${$page}`).onclick = () =>
             handlePageClick();
@@ -94,21 +98,14 @@ var copies = {
     });
 
     $window.on("load", async function () {
-        fs.readdirSync(
-            path.resolve("src", "windows", "html", "pageViews", "firstTime")
-        )
+        fs.readdirSync(process.cwd() + "/src/windows/html/pageviews/firstTime")
             .filter((file) => file.endsWith(".html"))
             .forEach((pageView) => {
                 $pages.set(
                     pageView.split("-")[0],
                     fs.readFileSync(
-                        path.resolve(
-                            "src",
-                            "windows",
-                            "html",
-                            "pageViews",
-                            "firstTime"
-                        ) +
+                        process.cwd() +
+                            "/src/windows/html/pageviews/firstTime" +
                             "/" +
                             pageView,
                         {
@@ -587,7 +584,7 @@ async function createAccount() {
     };
     console.log(acc);
 
-    let url = "http://sincmultiplayer.tk/";
+    let url = "https://us-central1-multiplayer-mod.cloudfunctions.net/api";
     if (isDev) {
         url = "http://localhost:5001/multiplayer-mod/us-central1/api/";
     }
@@ -647,7 +644,7 @@ async function createAccount() {
     );
 }
 function loginAccount() {
-    let url = "http://sincmultiplayer.tk/";
+    let url = "https://us-central1-multiplayer-mod.cloudfunctions.net/api";
     if (isDev) {
         url = "http://localhost:5001/multiplayer-mod/us-central1/api/";
     }
