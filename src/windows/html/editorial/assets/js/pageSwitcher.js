@@ -1,6 +1,6 @@
 const fs = require("fs");
 const $ = require("jquery");
-const { ipcRenderer } = require("electron").remote;
+const { ipcRenderer } = require("electron");
 (async () => {
     const pages = new Map();
     $(window).on("load", () => {
@@ -22,12 +22,15 @@ const { ipcRenderer } = require("electron").remote;
             });
         document.getElementById("main").innerHTML = pages.get("main");
         $("#playButton").on("click", () => {
-            ipcRenderer.emit("openGame");
+            console.log("Opening Game...");
+            ipcRenderer.sendSync("openGame");
         });
+        console.log(ipcRenderer);
         $("#showPlayTab").on("click", () => {
             document.getElementById("main").innerHTML = pages.get("main");
             $("#playButton").on("click", () => {
-                ipcRenderer.emit("openGame");
+                console.log("Opening Game...");
+                ipcRenderer.sendSync("openGame");
             });
         });
         $("#showChatTab").on("click", () => {

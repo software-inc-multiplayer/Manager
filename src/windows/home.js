@@ -7,6 +7,7 @@ const settings = require("electron-settings");
 const open = require("open");
 
 const { resolve } = require("app-root-path");
+const { writeFileSync } = require("fs");
 
 module.exports = async function spawn() {
     const win = new BrowserWindow({
@@ -33,14 +34,15 @@ module.exports = async function spawn() {
     electronLocalShortcut.register(win, "CTRL+I", () => {
         win.webContents.openDevTools();
     });
-    ipc.on("loaded", hideSplashscreen);
     ipc.on("openGame", async () => {
         win.hide();
-        const installDir = await settings.get("installDir");
-        if (installDir.toLowerCase().includes("steamapps")) {
-            const modInstalled = await settings.get();
-        }
-        open();
+        const installDir = await settings.get("install-dir");
+        const account = await settings.get("user");
+        const accountJSONPath =
+            installDir + "/DLLMods/Multiplayer/account.json";
+        writeFileSync(accountJSONPath, JSON.stringify(account), {
+            encoding: "utf-8",
+        });
     });
     win.on("ready-to-show", () => {
         if (global.isProd) win.show();
